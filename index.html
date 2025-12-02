@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecteur Élégant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #f5f5f5;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            user-select: none;
+        }
+
+        /* Conteneur principal */
+        #app {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Pages */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #0d0d0d;
+            overflow: hidden;
+            opacity: 0;
+            transform-style: preserve-3d;
+            transition: opacity 0.3s ease;
+        }
+
+        .page.active {
+            display: flex;
+            opacity: 1;
+            z-index: 1;
+        }
+
+        /* Animation de tourne-page */
+        .page.exit-left {
+            animation: pageExitLeft 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            z-index: 2;
+        }
+
+        .page.enter-right {
+            animation: pageEnterRight 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        .page.exit-right {
+            animation: pageExitRight 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            z-index: 2;
+        }
+
+        .page.enter-left {
+            animation: pageEnterLeft 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        @keyframes pageExitLeft {
+            0% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
+            100% { transform: rotateY(-90deg) translateZ(-100px); opacity: 0; }
+        }
+
+        @keyframes pageEnterRight {
+            0% { transform: rotateY(90deg) translateZ(-100px); opacity: 0; }
+            100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
+        }
+
+        @keyframes pageExitRight {
+            0% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
+            100% { transform: rotateY(90deg) translateZ(-100px); opacity: 0; }
+        }
+
+        @keyframes pageEnterLeft {
+            0% { transform: rotateY(-90deg) translateZ(-100px); opacity: 0; }
+            100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
+        }
+
+        /* Images de lecture */
+        .book-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: #000;
+        }
+
+        /* En-tête */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(to bottom, rgba(13, 13, 13, 0.95), rgba(13, 13, 13, 0.7));
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            transition: transform 0.5s ease;
+        }
+
+        .header.hidden {
+            transform: translateY(-100%);
+        }
+
+        .header-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-left: 10px;
+        }
+
+        .header-icon {
+            font-size: 1.4rem;
+            color: #bb86fc;
+        }
+
+        /* Barre de navigation inférieure */
+        .nav-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: linear-gradient(to top, rgba(13, 13, 13, 0.95), rgba(13, 13, 13, 0.7));
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            transition: transform 0.5s ease;
+        }
+
+        .nav-bar.hidden {
+            transform: translateY(100%);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            background: rgba(187, 134, 252, 0.15);
+            transform: scale(1.05);
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+            color: #bb86fc;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active .nav-icon {
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        .nav-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #b0b0b0;
+        }
+
+        .nav-item.active .nav-label {
+            color: #ffffff;
+        }
+
+        /* Contenu des pages de texte */
+        .page-content {
+            width: 90%;
+            max-width: 800px;
+            height: calc(100% - 130px);
+            margin-top: 70px;
+            padding: 20px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .page-title {
+            color: #bb86fc;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border-bottom: 2px solid rgba(187, 134, 252, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .page-text {
+            font-size: 1.1rem;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
+        .page-text p {
+            margin-bottom: 15px;
+        }
+
+        /* Indicateur de navigation */
+        .nav-indicator {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(187, 134, 252, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-indicator.left {
+            left: 20px;
+        }
+
+        .nav-indicator.right {
+            right: 20px;
+        }
+
+        .nav-indicator.show {
+            opacity: 1;
+        }
+
+        .nav-indicator i {
+            font-size: 1.8rem;
+            color: #bb86fc;
+        }
+
+        /* Indicateur de page */
+        .page-indicator {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            z-index: 90;
+            transition: opacity 0.5s ease;
+        }
+
+        /* État de chargement */
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #121212;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(187, 134, 252, 0.2);
+            border-radius: 50%;
+            border-top-color: #bb86fc;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Animation sonore (visuelle) */
+        .sound-effect {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0;
+        }
+
+        .sound-effect.show {
+            animation: soundWave 0.8s ease-out forwards;
+        }
+
+        @keyframes soundWave {
+            0% { transform: scale(0.1); opacity: 0.7; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Écran de chargement -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Chargement de l'application...</p>
+        </div>
+
+        <!-- Page d'accueil (couverture) -->
+        <div class="page active" id="page-home">
+            <div class="header">
+                <i class="fas fa-book header-icon"></i>
+                <h1 class="header-title">Lecteur Élégant</h1>
+            </div>
+            <img src="https://i.postimg.cc/1fPbJCgB/1.jpg" alt="Couverture du livre" class="book-image">
+            <div class="nav-bar">
+                <div class="nav-item active" data-page="home">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Accueil</span>
+                </div>
+                <div class="nav-item" data-page="reading">
+                    <i class="fas fa-book-open nav-icon"></i>
+                    <span class="nav-label">Lecture</span>
+                </div>
+                <div class="nav-item" data-page="bio">
+                    <i class="fas fa-user nav-icon"></i>
+                    <span class="nav-label">Biographie</span>
+                </div>
+                <div class="nav-item" data-page="privacy">
+                    <i class="fas fa-shield-alt nav-icon"></i>
+                    <span class="nav-label">Confidentialité</span>
+                </div>
+            </div>
+            <div class="page-indicator" id="page-indicator">Couverture</div>
+        </div>
+
+        <!-- Page de lecture -->
+        <div class="page" id="page-reading">
+            <div class="header">
+                <i class="fas fa-book-open header-icon"></i>
+                <h1 class="header-title">Lecture</h1>
+            </div>
+            <div id="reading-content">
+                <!-- Les images seront chargées ici dynamiquement -->
+            </div>
+            <div class="nav-bar">
+                <div class="nav-item" data-page="home">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Accueil</span>
+                </div>
+                <div class="nav-item active" data-page="reading">
+                    <i class="fas fa-book-open nav-icon"></i>
+                    <span class="nav-label">Lecture</span>
+                </div>
+                <div class="nav-item" data-page="bio">
+                    <i class="fas fa-user nav-icon"></i>
+                    <span class="nav-label">Biographie</span>
+                </div>
+                <div class="nav-item" data-page="privacy">
+                    <i class="fas fa-shield-alt nav-icon"></i>
+                    <span class="nav-label">Confidentialité</span>
+                </div>
+            </div>
+            <div class="page-indicator" id="reading-indicator">Page 1/13</div>
+        </div>
+
+        <!-- Page biographie -->
+        <div class="page" id="page-bio">
+            <div class="header">
+                <i class="fas fa-user header-icon"></i>
+                <h1 class="header-title">Biographie</h1>
+            </div>
+            <div class="page-content">
+                <h2 class="page-title">À propos de l'auteur</h2>
+                <div class="page-text">
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                    <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+                    <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.</p>
+                </div>
+            </div>
+            <div class="nav-bar">
+                <div class="nav-item" data-page="home">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Accueil</span>
+                </div>
+                <div class="nav-item" data-page="reading">
+                    <i class="fas fa-book-open nav-icon"></i>
+                    <span class="nav-label">Lecture</span>
+                </div>
+                <div class="nav-item active" data-page="bio">
+                    <i class="fas fa-user nav-icon"></i>
+                    <span class="nav-label">Biographie</span>
+                </div>
+                <div class="nav-item" data-page="privacy">
+                    <i class="fas fa-shield-alt nav-icon"></i>
+                    <span class="nav-label">Confidentialité</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page politique de confidentialité -->
+        <div class="page" id="page-privacy">
+            <div class="header">
+                <i class="fas fa-shield-alt header-icon"></i>
+                <h1 class="header-title">Politique de confidentialité</h1>
+            </div>
+            <div class="page-content">
+                <h2 class="page-title">Protection de vos données</h2>
+                <div class="page-text">
+                    <p>Votre vie privée est importante pour nous. Cette politique de confidentialité explique quelles informations nous collectons, comment nous les utilisons et les partageons.</p>
+                    <p><strong>Informations collectées :</strong> Nous collectons des informations que vous nous fournissez directement, ainsi que des informations sur votre utilisation de notre application.</p>
+                    <p><strong>Utilisation des informations :</strong> Les informations que nous collectons sont utilisées pour fournir, maintenir et améliorer nos services, pour communiquer avec vous, et pour développer de nouveaux services.</p>
+                    <p><strong>Partage des informations :</strong> Nous ne partageons pas vos informations personnelles avec des entreprises, organisations ou individus en dehors de notre organisation, sauf dans les cas suivants : avec votre consentement, pour des raisons légales, ou pour protéger nos droits.</p>
+                    <p><strong>Sécurité :</strong> Nous nous engageons à protéger la sécurité de vos informations personnelles et utilisons des mesures de sécurité appropriées pour les protéger contre tout accès non autorisé, altération, divulgation ou destruction.</p>
+                    <p><strong>Modifications :</strong> Nous pouvons modifier cette politique de confidentialité de temps à autre. Nous vous informerons de toute modification en publiant la nouvelle politique sur cette page.</p>
+                </div>
+            </div>
+            <div class="nav-bar">
+                <div class="nav-item" data-page="home">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Accueil</span>
+                </div>
+                <div class="nav-item" data-page="reading">
+                    <i class="fas fa-book-open nav-icon"></i>
+                    <span class="nav-label">Lecture</span>
+                </div>
+                <div class="nav-item" data-page="bio">
+                    <i class="fas fa-user nav-icon"></i>
+                    <span class="nav-label">Biographie</span>
+                </div>
+                <div class="nav-item active" data-page="privacy">
+                    <i class="fas fa-shield-alt nav-icon"></i>
+                    <span class="nav-label">Confidentialité</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicateurs de navigation par gestes -->
+        <div class="nav-indicator left" id="nav-left">
+            <i class="fas fa-chevron-left"></i>
+        </div>
+        <div class="nav-indicator right" id="nav-right">
+            <i class="fas fa-chevron-right"></i>
+        </div>
+
+        <!-- Effet sonore visuel -->
+        <div class="sound-effect" id="sound-effect"></div>
+    </div>
+
+    <script>
+        // Images du livre (dans l'ordre)
+        const bookImages = [
+            "https://i.postimg.cc/1fPbJCgB/1.jpg",  // Couverture
+            "https://i.postimg.cc/ykB2vQJM/2.jpg",
+            "https://i.postimg.cc/Vd12DGSh/3.jpg",
+            "https://i.postimg.cc/RN92Xs32/4.jpg",
+            "https://i.postimg.cc/KRFCJqkX/5.jpg",
+            "https://i.postimg.cc/HVHFBZcm/6.jpg",
+            "https://i.postimg.cc/7fDjmsGw/7.jpg",
+            "https://i.postimg.cc/D8FRBjJ7/8.jpg",
+            "https://i.postimg.cc/Tp9FSVmz/9.jpg",
+            "https://i.postimg.cc/Tp9FSVg8/10.jpg",
+            "https://i.postimg.cc/1fH2TGwy/11.jpg",
+            "https://i.postimg.cc/mtwJqYCh/12.jpg",
+            "https://i.postimg.cc/4m5qM6VK/13.jpg"
+        ];
+
+        // Variables d'état de l'application
+        let currentPage = 'home';
+        let currentReadingPage = 0;
+        let isAnimating = false;
+        let hideUI = false;
+        let inactivityTimer;
+        const INACTIVITY_DELAY = 7000; // 7 secondes
+
+        // Références aux éléments DOM
+        const app = document.getElementById('app');
+        const loadingScreen = document.getElementById('loading');
+        const pages = {
+            home: document.getElementById('page-home'),
+            reading: document.getElementById('page-reading'),
+            bio: document.getElementById('page-bio'),
+            privacy: document.getElementById('page-privacy')
+        };
+        const readingContent = document.getElementById('reading-content');
+        const navItems = document.querySelectorAll('.nav-item');
+        const headers = document.querySelectorAll('.header');
+        const navBars = document.querySelectorAll('.nav-bar');
+        const pageIndicator = document.getElementById('page-indicator');
+        const readingIndicator = document.getElementById('reading-indicator');
+        const navLeft = document.getElementById('nav-left');
+        const navRight = document.getElementById('nav-right');
+        const soundEffect = document.getElementById('sound-effect');
+
+        // Initialisation de l'application
+        function initApp() {
+            // Simuler un temps de chargement
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                
+                // Initialiser le contenu de lecture
+                initReadingContent();
+                
+                // Démarrer le timer d'inactivité
+                resetInactivityTimer();
+                
+                // Ajouter les écouteurs d'événements
+                setupEventListeners();
+            }, 1500);
+        }
+
+        // Initialiser le contenu de lecture
+        function initReadingContent() {
+            readingContent.innerHTML = '';
+            
+            bookImages.forEach((imageSrc, index) => {
+                const img = document.createElement('img');
+                img.src = imageSrc;
+                img.alt = `Page ${index + 1}`;
+                img.className = 'book-image';
+                img.style.display = index === 0 ? 'block' : 'none';
+                readingContent.appendChild(img);
+            });
+            
+            updateReadingIndicator();
+        }
+
+        // Mettre à jour l'indicateur de page de lecture
+        function updateReadingIndicator() {
+            readingIndicator.textContent = `Page ${currentReadingPage + 1}/${bookImages.length}`;
+        }
+
+        // Configurer les écouteurs d'événements
+        function setupEventListeners() {
+            // Navigation par clic sur les éléments de navigation
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const page = item.getAttribute('data-page');
+                    navigateToPage(page);
+                    resetInactivityTimer();
+                });
+            });
+
+            // Navigation par gestes (défilement)
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchEndX = 0;
+            let touchEndY = 0;
+            
+            app.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+                resetInactivityTimer();
+            }, { passive: true });
+            
+            app.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipe();
+                resetInactivityTimer();
+            }, { passive: true });
+            
+            // Navigation par souris (cliquer et glisser)
+            let mouseDownX = 0;
+            let mouseDownY = 0;
+            let mouseUpX = 0;
+            let mouseUpY = 0;
+            
+            app.addEventListener('mousedown', (e) => {
+                mouseDownX = e.clientX;
+                mouseDownY = e.clientY;
+                resetInactivityTimer();
+            });
+            
+            app.addEventListener('mouseup', (e) => {
+                mouseUpX = e.clientX;
+                mouseUpY = e.clientY;
+                handleMouseSwipe();
+                resetInactivityTimer();
+            });
+            
+            // Navigation par clavier (flèches)
+            document.addEventListener('keydown', (e) => {
+                if (isAnimating) return;
+                
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    if (currentPage === 'reading') {
+                        nextReadingPage();
+                    } else if (currentPage === 'home') {
+                        navigateToPage('reading');
+                    }
+                    resetInactivityTimer();
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    if (currentPage === 'reading') {
+                        prevReadingPage();
+                    }
+                    resetInactivityTimer();
+                }
+            });
+            
+            // Mouvement de souris pour réinitialiser le timer d'inactivité
+            app.addEventListener('mousemove', resetInactivityTimer);
+            app.addEventListener('touchmove', resetInactivityTimer);
+        }
+
+        // Gérer les gestes de balayage tactile
+        function handleSwipe() {
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            
+            // Seuil minimal pour considérer un geste
+            const minSwipeDistance = 50;
+            
+            // Vérifier si c'est un balayage horizontal ou vertical
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Balayage horizontal
+                if (Math.abs(deltaX) > minSwipeDistance) {
+                    if (deltaX > 0) {
+                        // Balayage vers la droite (page précédente)
+                        if (currentPage === 'reading') {
+                            prevReadingPage();
+                        }
+                    } else {
+                        // Balayage vers la gauche (page suivante)
+                        if (currentPage === 'reading') {
+                            nextReadingPage();
+                        } else if (currentPage === 'home') {
+                            navigateToPage('reading');
+                        }
+                    }
+                }
+            } else {
+                // Balayage vertical
+                if (Math.abs(deltaY) > minSwipeDistance) {
+                    if (deltaY > 0) {
+                        // Balayage vers le bas (page suivante)
+                        if (currentPage === 'reading') {
+                            nextReadingPage();
+                        } else if (currentPage === 'home') {
+                            navigateToPage('reading');
+                        }
+                    } else {
+                        // Balayage vers le haut (page précédente)
+                        if (currentPage === 'reading') {
+                            prevReadingPage();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Gérer les gestes de souris (cliquer et glisser)
+        function handleMouseSwipe() {
+            const deltaX = mouseUpX - mouseDownX;
+            const deltaY = mouseUpY - mouseDownY;
+            
+            // Seuil minimal pour considérer un geste
+            const minSwipeDistance = 50;
+            
+            // Vérifier si c'est un balayage horizontal ou vertical
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Balayage horizontal
+                if (Math.abs(deltaX) > minSwipeDistance) {
+                    if (deltaX > 0) {
+                        // Balayage vers la droite (page précédente)
+                        if (currentPage === 'reading') {
+                            prevReadingPage();
+                        }
+                    } else {
+                        // Balayage vers la gauche (page suivante)
+                        if (currentPage === 'reading') {
+                            nextReadingPage();
+                        } else if (currentPage === 'home') {
+                            navigateToPage('reading');
+                        }
+                    }
+                }
+            } else {
+                // Balayage vertical
+                if (Math.abs(deltaY) > minSwipeDistance) {
+                    if (deltaY > 0) {
+                        // Balayage vers le bas (page suivante)
+                        if (currentPage === 'reading') {
+                            nextReadingPage();
+                        } else if (currentPage === 'home') {
+                            navigateToPage('reading');
+                        }
+                    } else {
+                        // Balayage vers le haut (page précédente)
+                        if (currentPage === 'reading') {
+                            prevReadingPage();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Naviguer vers une page spécifique
+        function navigateToPage(pageId) {
+            if (isAnimating || currentPage === pageId) return;
+            
+            const oldPage = pages[currentPage];
+            const newPage = pages[pageId];
+            
+            // Mettre à jour la navigation active
+            navItems.forEach(item => {
+                if (item.getAttribute('data-page') === pageId) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            // Si on navigue vers la page de lecture depuis l'accueil
+            if (currentPage === 'home' && pageId === 'reading') {
+                playPageTurnAnimation(oldPage, newPage, 'right');
+            } 
+            // Si on revient à l'accueil depuis la lecture
+            else if (currentPage === 'reading' && pageId === 'home') {
+                playPageTurnAnimation(oldPage, newPage, 'left');
+            }
+            // Pour les autres navigations
+            else {
+                oldPage.classList.remove('active');
+                newPage.classList.add('active');
+            }
+            
+            currentPage = pageId;
+            resetInactivityTimer();
+        }
+
+        // Jouer l'animation de tourne-page
+        function playPageTurnAnimation(oldPage, newPage, direction) {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            
+            // Afficher l'indicateur de navigation
+            if (direction === 'right') {
+                navRight.classList.add('show');
+            } else {
+                navLeft.classList.add('show');
+            }
+            
+            // Jouer l'effet sonore visuel
+            playSoundEffect();
+            
+            // Configurer les animations
+            if (direction === 'right') {
+                oldPage.classList.add('exit-left');
+                newPage.classList.add('enter-right');
+            } else {
+                oldPage.classList.add('exit-right');
+                newPage.classList.add('enter-left');
+            }
+            
+            // Afficher la nouvelle page après le début de l'animation
+            setTimeout(() => {
+                newPage.classList.add('active');
+            }, 100);
+            
+            // Nettoyer après l'animation
+            setTimeout(() => {
+                oldPage.classList.remove('active', 'exit-left', 'exit-right');
+                newPage.classList.remove('enter-right', 'enter-left');
+                
+                if (direction === 'right') {
+                    navRight.classList.remove('show');
+                } else {
+                    navLeft.classList.remove('show');
+                }
+                
+                isAnimating = false;
+            }, 700);
+        }
+
+        // Page de lecture suivante
+        function nextReadingPage() {
+            if (currentReadingPage < bookImages.length - 1) {
+                // Animation vers la page suivante
+                const currentImg = readingContent.children[currentReadingPage];
+                const nextImg = readingContent.children[currentReadingPage + 1];
+                
+                playReadingPageAnimation(currentImg, nextImg, 'next');
+                currentReadingPage++;
+                updateReadingIndicator();
+                resetInactivityTimer();
+            }
+        }
+
+        // Page de lecture précédente
+        function prevReadingPage() {
+            if (currentReadingPage > 0) {
+                // Animation vers la page précédente
+                const currentImg = readingContent.children[currentReadingPage];
+                const prevImg = readingContent.children[currentReadingPage - 1];
+                
+                playReadingPageAnimation(currentImg, prevImg, 'prev');
+                currentReadingPage--;
+                updateReadingIndicator();
+                resetInactivityTimer();
+            }
+        }
+
+        // Animation de changement de page de lecture
+        function playReadingPageAnimation(currentImg, nextImg, direction) {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            
+            // Afficher l'indicateur de navigation
+            if (direction === 'next') {
+                navRight.classList.add('show');
+            } else {
+                navLeft.classList.add('show');
+            }
+            
+            // Jouer l'effet sonore visuel
+            playSoundEffect();
+            
+            // Afficher la nouvelle image
+            nextImg.style.display = 'block';
+            
+            // Animer la transition
+            if (direction === 'next') {
+                currentImg.style.animation = 'pageExitLeft 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards';
+                nextImg.style.animation = 'pageEnterRight 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards';
+            } else {
+                currentImg.style.animation = 'pageExitRight 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards';
+                nextImg.style.animation = 'pageEnterLeft 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards';
+            }
+            
+            // Cacher l'ancienne image après l'animation
+            setTimeout(() => {
+                currentImg.style.display = 'none';
+                currentImg.style.animation = '';
+                nextImg.style.animation = '';
+                
+                if (direction === 'next') {
+                    navRight.classList.remove('show');
+                } else {
+                    navLeft.classList.remove('show');
+                }
+                
+                isAnimating = false;
+            }, 700);
+        }
+
+        // Jouer un effet sonore visuel
+        function playSoundEffect() {
+            soundEffect.classList.remove('show');
+            void soundEffect.offsetWidth; // Réinitialiser l'animation
+            soundEffect.classList.add('show');
+        }
+
+        // Réinitialiser le timer d'inactivité
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            
+            // Afficher l'UI si elle est cachée
+            if (hideUI) {
+                showUI();
+            }
+            
+            // Démarrer un nouveau timer
+            inactivityTimer = setTimeout(hideUI, INACTIVITY_DELAY);
+        }
+
+        // Masquer l'interface utilisateur
+        function hideUI() {
+            hideUI = true;
+            headers.forEach(header => header.classList.add('hidden'));
+            navBars.forEach(navBar => navBar.classList.add('hidden'));
+            
+            // Masquer également les indicateurs de page
+            if (pageIndicator) pageIndicator.style.opacity = '0';
+            if (readingIndicator) readingIndicator.style.opacity = '0';
+        }
+
+        // Afficher l'interface utilisateur
+        function showUI() {
+            hideUI = false;
+            headers.forEach(header => header.classList.remove('hidden'));
+            navBars.forEach(navBar => navBar.classList.remove('hidden'));
+            
+            // Afficher les indicateurs de page
+            if (pageIndicator) pageIndicator.style.opacity = '1';
+            if (readingIndicator) readingIndicator.style.opacity = '1';
+        }
+
+        // Démarrer l'application
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
