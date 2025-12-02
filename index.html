@@ -1070,36 +1070,39 @@ body.light-mode .book-page {
                 document.addEventListener('keydown', () => this.resetIdleTimer());
             }
 
-            navigate(direction) {
-                if (this.isAnimating) return;
-                
-                this.resetIdleTimer();
-                this.showBars();
-                
-                if (direction === 'next') {
-                    if (this.currentSection === 'home') {
-                        // Depuis la couverture, aller à la lecture
-                        this.switchSection('reading');
-                    } else if (this.currentSection === 'reading') {
-                        if (this.currentPage < this.totalPages) {
-                            this.currentPage++;
-                            this.showPageTurnAnimation('right');
-                            this.updatePage();
-                        }
-                    }
-                } else {
-                    if (this.currentSection === 'reading') {
-                        if (this.currentPage > 2) {
-                            this.currentPage--;
-                            this.showPageTurnAnimation('left');
-                            this.updatePage();
-                        } else if (this.currentPage === 2) {
-                            // Revenir à la couverture depuis la première page de lecture
-                            this.switchSection('home');
-                        }
-                    }
-                }
+           navigate(direction) {
+    if (this.isAnimating) return;
+    
+    // ENLÈVE cette ligne :
+    // this.resetIdleTimer();
+    // this.showBars();
+    
+    // MET à la place :
+    this.resetIdleTimer();
+    // NE PAS appeler showBars() ici
+    
+    if (direction === 'next') {
+        if (this.currentSection === 'home') {
+            this.switchSection('reading');
+        } else if (this.currentSection === 'reading') {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+                this.showPageTurnAnimation('right');
+                this.updatePage();
             }
+        }
+    } else {
+        if (this.currentSection === 'reading') {
+            if (this.currentPage > 2) {
+                this.currentPage--;
+                this.showPageTurnAnimation('left');
+                this.updatePage();
+            } else if (this.currentPage === 2) {
+                this.switchSection('home');
+            }
+        }
+    }
+}
 
             switchSection(section) {
                 if (this.isAnimating || this.currentSection === section) return;
