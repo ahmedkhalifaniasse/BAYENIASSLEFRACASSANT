@@ -886,7 +886,7 @@ body.light-mode .book-page {
                 this.isAnimating = false;
                 this.barsVisible = true;
                 this.hideBarsTimeout = null;
-                this.isLightMode = false;
+                this.isLightMode = true;
                 this.imagesLoaded = 0;
                 this.totalImages = 12;
                 this.pageImages = [
@@ -1234,14 +1234,25 @@ body.light-mode .book-page {
                 this.showBars();
             }
 
-            loadThemePreference() {
-                const savedTheme = localStorage.getItem('bookReaderTheme');
-                if (savedTheme === 'light') {
-                    this.isLightMode = true;
-                    document.body.classList.add('light-mode');
-                    document.querySelector('#themeToggle i').className = 'fas fa-sun';
-                }
-            }
+           loadThemePreference() {
+    const savedTheme = localStorage.getItem('bookReaderTheme');
+    // Mode clair par défaut sauf si l'utilisateur a explicitement choisi le mode sombre
+    if (savedTheme === 'dark') {
+        this.isLightMode = false;
+        document.body.classList.remove('light-mode');
+        document.querySelector('#themeToggle i').className = 'fas fa-moon';
+    } else {
+        // Par défaut : mode clair
+        this.isLightMode = true;
+        document.body.classList.add('light-mode');
+        document.querySelector('#themeToggle i').className = 'fas fa-sun';
+        
+        // Sauvegarder la préférence par défaut
+        if (!savedTheme) {
+            localStorage.setItem('bookReaderTheme', 'light');
+        }
+    }
+}
 
             startIdleTimer() {
                 this.hideBarsTimeout = setTimeout(() => {
