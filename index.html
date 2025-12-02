@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BookReader - Application de Lecture</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, minimum-scale=1.0">
+    <title>Baye Niass, le fracassant</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -20,7 +20,13 @@
             height: 100vh;
             overflow: hidden;
             position: relative;
-            touch-action: pan-y;
+            touch-action: pan-y pinch-zoom;
+            transition: background-color 0.3s ease;
+        }
+
+        body.light-mode {
+            background: #ffffff;
+            color: #333333;
         }
 
         #app {
@@ -47,17 +53,28 @@
             background: #0a0a0a;
         }
 
+        body.light-mode .page {
+            background: #ffffff;
+        }
+
         .page.active {
             opacity: 1;
             visibility: visible;
         }
 
-        .book-page {
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            cursor: pointer;
-        }
+      .book-page {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    /* Supprime ces deux lignes problématiques */
+    /* image-rendering: -webkit-optimize-contrast; */
+    /* image-rendering: crisp-edges; */
+    -webkit-user-select: none;
+    user-select: none;
+    /* Ajoute cette propriété pour forcer la netteté */
+    image-rendering: auto;
+}
 
         .content-page {
             max-width: 800px;
@@ -65,6 +82,10 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             cursor: pointer;
+        }
+
+        body.light-mode .content-page {
+            background: #ffffff;
         }
 
         .content-page h1 {
@@ -76,12 +97,21 @@
             letter-spacing: 2px;
         }
 
+        body.light-mode .content-page h1 {
+            color: #2c3e50;
+        }
+
         .content-page h2 {
             font-size: 2.2rem;
             margin: 2rem 0 1rem;
             color: #FFD700;
             border-bottom: 1px solid rgba(255, 215, 0, 0.3);
             padding-bottom: 0.5rem;
+        }
+
+        body.light-mode .content-page h2 {
+            color: #34495e;
+            border-bottom: 1px solid rgba(52, 73, 94, 0.3);
         }
 
         .content-page p {
@@ -106,6 +136,7 @@
             background: transparent;
             pointer-events: auto;
             cursor: pointer;
+            z-index: 102;
         }
 
         .prev-zone {
@@ -133,6 +164,15 @@
             justify-content: space-between;
             align-items: center;
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+        }
+
+        body.light-mode .top-bar,
+        body.light-mode .bottom-bar {
+            background: linear-gradient(to bottom, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 50%, transparent 100%);
+        }
+
+        body.light-mode .bottom-bar {
+            background: linear-gradient(to top, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 50%, transparent 100%);
         }
 
         .top-bar {
@@ -164,9 +204,42 @@
             color: #FFD700;
         }
 
-        .page-indicator {
-            font-size: 1.1rem;
-            opacity: 0.8;
+        body.light-mode .app-title {
+            color: #2c3e50;
+        }
+
+      /* Option 1: Supprime complètement la classe */
+.page-indicator {
+    display: none !important;
+}
+
+/* Option 2: Ou simplement cacher l'élément */
+#pageIndicator {
+    display: none !important;
+}
+
+        body.light-mode .page-indicator {
+            color: #333333;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #FFD700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 103;
+        }
+
+        body.light-mode .theme-toggle {
+            color: #2c3e50;
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-50%) scale(1.1);
         }
 
         .nav-icons {
@@ -186,13 +259,25 @@
             pointer-events: auto;
         }
 
+        body.light-mode .nav-icon {
+            color: rgba(0, 0, 0, 0.7);
+        }
+
         .nav-icon:hover {
             color: #FFD700;
             transform: translateY(-5px);
         }
 
+        body.light-mode .nav-icon:hover {
+            color: #2c3e50;
+        }
+
         .nav-icon.active {
             color: #FFD700;
+        }
+
+        body.light-mode .nav-icon.active {
+            color: #2c3e50;
         }
 
         .nav-icon.active::after {
@@ -205,6 +290,10 @@
             height: 6px;
             background: #FFD700;
             border-radius: 50%;
+        }
+
+        body.light-mode .nav-icon.active::after {
+            background: #2c3e50;
         }
 
         .page-turn-animation {
@@ -220,6 +309,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        body.light-mode .page-turn-animation {
+            background: #ffffff;
         }
 
         .page-turn-animation .page-turn {
@@ -241,9 +334,19 @@
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
         }
 
+        body.light-mode .page-turn-animation .page-front,
+        body.light-mode .page-turn-animation .page-back {
+            background: linear-gradient(45deg, #e0e0e0, #f0f0f0);
+            box-shadow: 0 0 30px rgba(44, 62, 80, 0.2);
+        }
+
         .page-turn-animation .page-back {
             transform: rotateY(180deg);
             background: linear-gradient(45deg, #2a2a2a, #1a1a1a);
+        }
+
+        body.light-mode .page-turn-animation .page-back {
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
         }
 
         .turn-left {
@@ -302,6 +405,10 @@
             animation: soundWave 0.8s ease-in-out infinite;
         }
 
+        body.light-mode .bar {
+            background: linear-gradient(to top, #2c3e50, #34495e);
+        }
+
         .bar:nth-child(2) { animation-delay: 0.1s; }
         .bar:nth-child(3) { animation-delay: 0.2s; }
         .bar:nth-child(4) { animation-delay: 0.3s; }
@@ -320,10 +427,15 @@
             height: 100%;
             background: #0a0a0a;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 2000;
             transition: opacity 0.5s ease;
+        }
+
+        body.light-mode .loading-screen {
+            background: #ffffff;
         }
 
         .loader {
@@ -333,6 +445,22 @@
             border-top-color: #FFD700;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        body.light-mode .loader {
+            border: 3px solid rgba(44, 62, 80, 0.3);
+            border-top-color: #2c3e50;
+        }
+
+        .loading-text {
+            color: #FFD700;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+
+        body.light-mode .loading-text {
+            color: #2c3e50;
         }
 
         @keyframes spin {
@@ -351,9 +479,21 @@
             pointer-events: none;
         }
 
+        body.light-mode .touch-hint {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 0.5; }
             50% { opacity: 1; }
+        }
+
+        .image-preloader {
+            position: absolute;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
         }
 
         @media (max-width: 768px) {
@@ -362,18 +502,73 @@
             .content-page p { font-size: 1.1rem; }
             .nav-icons { gap: 25px; }
             .nav-icon { font-size: 1.5rem; }
+            .theme-toggle { font-size: 1.3rem; }
         }
 
         @media (max-height: 600px) {
             .bottom-bar { padding: 10px 20px 15px; }
             .touch-hint { bottom: 80px; }
         }
+      /* Ajoute cette règle à la fin du CSS */
+.book-page img, 
+.book-page {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+      .page-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    -webkit-user-drag: none;
+    user-drag: none;
+    pointer-events: none;
+    /* Pour éviter les espaces aux bords */
+    margin: 0;
+    padding: 0;
+    /* Force l'affichage correct */
+    max-width: 100vw;
+    max-height: 100vh;
+}
+
+.book-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: #0a0a0a;
+    padding: 0 !important; /* Supprime tout padding */
+    margin: 0 !important; /* Supprime tout margin */
+}
+
+body.light-mode .book-page {
+    background: #ffffff;
+}
+
+/* Assure-toi que la page prend toute la place */
+.page {
+    padding: 0 !important; /* IMPORTANT: Supprime le padding de 20px */
+    margin: 0 !important;
+}
+
+/* Pour les pages de contenu (bio et privacy) garde le padding */
+.content-page {
+    max-width: 800px;
+    padding: 40px 20px; /* Garde le padding pour le texte */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    cursor: pointer;
+}
     </style>
 </head>
 <body>
     <div class="loading-screen" id="loadingScreen">
         <div class="loader"></div>
+        <div class="loading-text">Chargement des pages...</div>
     </div>
+
+    <div class="image-preloader" id="imagePreloader"></div>
 
     <div class="page-turn-animation" id="pageTurnAnimation">
         <div class="page-turn">
@@ -399,8 +594,11 @@
     </div>
 
     <div class="top-bar" id="topBar">
-        <div class="app-title">BookReader</div>
-        <div class="page-indicator" id="pageIndicator">Page 1/13</div>
+        <div class="app-title">Baye Niass, le fracassant</div>
+        <div class="page-indicator" id="pageIndicator"> </div>
+        <div class="theme-toggle" id="themeToggle">
+            <i class="fas fa-moon"></i>
+        </div>
     </div>
 
     <div class="bottom-bar" id="bottomBar">
@@ -422,36 +620,51 @@
 
     <div id="app">
         <!-- Page d'accueil (Couverture) -->
-        <div class="page book-page active" id="home" 
-             style="background-image: url('https://i.postimg.cc/Kc9mFHsm/1.png');"></div>
+       <div class="page book-page active" id="home">
+    <img src="https://i.postimg.cc/Kc9mFHsm/1.png" alt="Page 1" style="width: 100%; height: 100%; object-fit: contain;">
+</div>
 
-        <!-- Pages de lecture -->
-        <div class="page book-page" id="reading" 
-             style="background-image: url('https://i.postimg.cc/ykB2vQJM/2.jpg');"></div>
+      <!-- Page d'accueil (Couverture) -->
+<div class="page book-page active" id="home">
+    <img src="https://i.postimg.cc/Kc9mFHsm/1.png" alt="Page 1" class="page-image">
+</div>
 
-        <!-- Pages de lecture supplémentaires -->
-        <div class="page book-page" id="page3" 
-             style="background-image: url('https://i.postimg.cc/Vd12DGSh/3.jpg');"></div>
-        <div class="page book-page" id="page4" 
-             style="background-image: url('https://i.postimg.cc/RN92Xs32/4.jpg');"></div>
-        <div class="page book-page" id="page5" 
-             style="background-image: url('https://i.postimg.cc/KRFCJqkX/5.jpg');"></div>
-        <div class="page book-page" id="page6" 
-             style="background-image: url('https://i.postimg.cc/HVHFBZcm/6.jpg');"></div>
-        <div class="page book-page" id="page7" 
-             style="background-image: url('https://i.postimg.cc/7fDjmsGw/7.jpg');"></div>
-        <div class="page book-page" id="page8" 
-             style="background-image: url('https://i.postimg.cc/D8FRBjJ7/8.jpg');"></div>
-        <div class="page book-page" id="page9" 
-             style="background-image: url('https://i.postimg.cc/Tp9FSVmz/9.jpg');"></div>
-        <div class="page book-page" id="page10" 
-             style="background-image: url('https://i.postimg.cc/Tp9FSVg8/10.jpg');"></div>
-        <div class="page book-page" id="page11" 
-             style="background-image: url('https://i.postimg.cc/1fH2TGwy/11.jpg');"></div>
-        <div class="page book-page" id="page12" 
-             style="background-image: url('https://i.postimg.cc/mtwJqYCh/12.jpg');"></div>
-        <div class="page book-page" id="page13" 
-             style="background-image: url('https://i.postimg.cc/4m5qM6VK/13.jpg');"></div>
+<!-- Pages de lecture -->
+<div class="page book-page" id="reading">
+    <img src="https://i.postimg.cc/xTcnd3Wv/2.png" alt="Page 2" class="page-image">
+</div>
+
+<!-- Pages de lecture supplémentaires -->
+<div class="page book-page" id="page3">
+    <img src="https://i.postimg.cc/yYtB3SHv/3.png" alt="Page 3" class="page-image">
+</div>
+<div class="page book-page" id="page4">
+    <img src="https://i.postimg.cc/zXV8fF9S/4.png" alt="Page 4" class="page-image">
+</div>
+<div class="page book-page" id="page5">
+    <img src="https://i.postimg.cc/ZKC4qx1p/5.png" alt="Page 5" class="page-image">
+</div>
+<div class="page book-page" id="page6">
+    <img src="https://i.postimg.cc/gkQdL6pn/6.png" alt="Page 6" class="page-image">
+</div>
+<div class="page book-page" id="page7">
+    <img src="https://i.postimg.cc/0NqscRrf/7.png" alt="Page 7" class="page-image">
+</div>
+<div class="page book-page" id="page8">
+    <img src="https://i.postimg.cc/hGqBpWfn/8.png" alt="Page 8" class="page-image">
+</div>
+<div class="page book-page" id="page9">
+    <img src="https://i.postimg.cc/xdS2tDcV/9.png" alt="Page 9" class="page-image">
+</div>
+<div class="page book-page" id="page10">
+    <img src="https://i.postimg.cc/vmLdKqVM/10.png" alt="Page 10" class="page-image">
+</div>
+<div class="page book-page" id="page11">
+    <img src="https://i.postimg.cc/DzdKNjX4/11.png" alt="Page 11" class="page-image">
+</div>
+<div class="page book-page" id="page12">
+    <img src="https://i.postimg.cc/85pVgRR5/13.png" alt="Page 12" class="page-image">
+</div>
 
         <!-- Page Biographie -->
         <div class="page content-page" id="bio">
@@ -494,51 +707,78 @@
         class BookReader {
             constructor() {
                 this.currentPage = 1;
-                this.totalPages = 13;
+                this.totalPages = 12; // 12 pages de contenu (excluant la couverture)
                 this.currentSection = 'home';
                 this.isAnimating = false;
                 this.barsVisible = true;
                 this.hideBarsTimeout = null;
-                this.pages = ['home', 'reading', 'page3', 'page4', 'page5', 'page6', 'page7', 
-                             'page8', 'page9', 'page10', 'page11', 'page12', 'page13', 'bio', 'privacy'];
-                this.sections = ['home', 'reading', 'bio', 'privacy'];
+                this.isLightMode = false;
+                this.imagesLoaded = 0;
+                this.totalImages = 12;
                 this.pageImages = [
-    'https://i.postimg.cc/Kc9mFHsm/1.png',
-    
-    'https://i.postimg.cc/xTcnd3Wv/2.png',
-    'https://i.postimg.cc/yYtB3SHv/3.png',
-    'https://i.postimg.cc/zXV8fF9S/4.png',
-    'https://i.postimg.cc/ZKC4qx1p/5.png',
-    'https://i.postimg.cc/gkQdL6pn/6.png',
-    'https://i.postimg.cc/0NqscRrf/7.png',
-    'https://i.postimg.cc/hGqBpWfn/8.png',
-    'https://i.postimg.cc/xdS2tDcV/9.png',
-                  'https://i.postimg.cc/vmLdKqVM/10.png',
-    'https://i.postimg.cc/DzdKNjX4/11.png',
-    'https://i.postimg.cc/85pVgRR5/13.png'
-];
-
+                    'https://i.postimg.cc/Kc9mFHsm/1.png',
+                    'https://i.postimg.cc/xTcnd3Wv/2.png',
+                    'https://i.postimg.cc/yYtB3SHv/3.png',
+                    'https://i.postimg.cc/zXV8fF9S/4.png',
+                    'https://i.postimg.cc/ZKC4qx1p/5.png',
+                    'https://i.postimg.cc/gkQdL6pn/6.png',
+                    'https://i.postimg.cc/0NqscRrf/7.png',
+                    'https://i.postimg.cc/hGqBpWfn/8.png',
+                    'https://i.postimg.cc/xdS2tDcV/9.png',
+                    'https://i.postimg.cc/vmLdKqVM/10.png',
+                    'https://i.postimg.cc/DzdKNjX4/11.png',
+                    'https://i.postimg.cc/85pVgRR5/13.png'
+                ];
 
                 this.init();
             }
 
             init() {
-                setTimeout(() => {
-                    document.getElementById('loadingScreen').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('loadingScreen').style.display = 'none';
-                        this.setupEventListeners();
-                        this.startIdleTimer();
-                        this.updatePageIndicator();
-                    }, 500);
-                }, 1000);
+                this.preloadImages();
+                this.setupEventListeners();
+                this.updatePageIndicator();
+            }
 
-                setTimeout(() => {
-                    document.getElementById('touchHint').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('touchHint').style.display = 'none';
-                    }, 500);
-                }, 3000);
+            preloadImages() {
+                const preloader = document.getElementById('imagePreloader');
+                const loadingText = document.querySelector('.loading-text');
+                
+                this.pageImages.forEach((imgUrl, index) => {
+                    const img = new Image();
+                    img.src = imgUrl;
+                    img.onload = () => {
+                        this.imagesLoaded++;
+                        const progress = Math.round((this.imagesLoaded / this.totalImages) * 100);
+                        loadingText.textContent = `Chargement des images... ${progress}%`;
+                        
+                        if (this.imagesLoaded === this.totalImages) {
+                            setTimeout(() => {
+                                document.getElementById('loadingScreen').style.opacity = '0';
+                                setTimeout(() => {
+                                    document.getElementById('loadingScreen').style.display = 'none';
+                                    this.startIdleTimer();
+                                }, 500);
+                            }, 500);
+                        }
+                    };
+                    
+                    img.onerror = () => {
+                        this.imagesLoaded++;
+                        console.warn(`Image ${index + 1} failed to load: ${imgUrl}`);
+                        
+                        if (this.imagesLoaded === this.totalImages) {
+                            setTimeout(() => {
+                                document.getElementById('loadingScreen').style.opacity = '0';
+                                setTimeout(() => {
+                                    document.getElementById('loadingScreen').style.display = 'none';
+                                    this.startIdleTimer();
+                                }, 500);
+                            }, 500);
+                        }
+                    };
+                    
+                    preloader.appendChild(img);
+                });
             }
 
             setupEventListeners() {
@@ -555,8 +795,8 @@
 
                 // Cliquer sur l'écran pour afficher/masquer les barres
                 document.getElementById('app').addEventListener('click', (e) => {
-                    // Ne pas déclencher si on clique sur les icônes de navigation
-                    if (e.target.closest('.nav-icon') || e.target.closest('.nav-zone')) {
+                    // Ne pas déclencher si on clique sur les icônes de navigation ou le theme toggle
+                    if (e.target.closest('.nav-icon') || e.target.closest('.nav-zone') || e.target.closest('#themeToggle')) {
                         return;
                     }
                     
@@ -567,6 +807,12 @@
                     }
                 });
 
+                // Toggle du thème
+                document.getElementById('themeToggle').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleTheme();
+                });
+
                 // Navigation clavier
                 document.addEventListener('keydown', (e) => {
                     if (this.isAnimating) return;
@@ -575,6 +821,8 @@
                         this.navigate('prev');
                     } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                         this.navigate('next');
+                    } else if (e.key === 't' || e.key === 'T') {
+                        this.toggleTheme();
                     }
                 });
 
@@ -685,6 +933,14 @@
                 this.resetIdleTimer();
                 this.showBars();
                 
+                // Masquer le bouton thème sur les autres pages que l'accueil
+                const themeToggle = document.getElementById('themeToggle');
+                if (section === 'home') {
+                    themeToggle.style.display = 'block';
+                } else {
+                    themeToggle.style.display = 'none';
+                }
+                
                 // Mettre à jour les icônes actives
                 document.querySelectorAll('.nav-icon').forEach(icon => {
                     icon.classList.remove('active');
@@ -745,12 +1001,10 @@
                 this.updatePageIndicator();
                 
                 // Mettre à jour l'image de la page de lecture
-                if (this.currentPage >= 2 && this.currentPage <= 13) {
+                if (this.currentPage >= 2 && this.currentPage <= this.totalPages + 1) {
                     const pageId = this.currentPage === 2 ? 'reading' : `page${this.currentPage}`;
                     const pageElement = document.getElementById(pageId);
                     if (pageElement) {
-                        pageElement.style.backgroundImage = `url('${this.pageImages[this.currentPage - 1]}')`;
-                        
                         // Masquer toutes les pages de lecture
                         document.querySelectorAll('.book-page').forEach(page => {
                             page.classList.remove('active');
@@ -765,7 +1019,9 @@
             updatePageIndicator() {
                 const indicator = document.getElementById('pageIndicator');
                 if (this.currentSection === 'reading') {
-                    indicator.textContent = `Page ${this.currentPage - 1}/${this.totalPages - 1}`;
+                    // Afficher 2/12 quand on commence la lecture
+                    const pageNumber = this.currentPage - 1;
+                    indicator.textContent = `Page ${pageNumber}/${this.totalPages}`;
                 } else {
                     indicator.textContent = this.getSectionTitle(this.currentSection);
                 }
@@ -779,6 +1035,35 @@
                     'privacy': 'Confidentialité'
                 };
                 return titles[section] || section;
+            }
+
+            toggleTheme() {
+                this.isLightMode = !this.isLightMode;
+                const body = document.body;
+                const themeIcon = document.querySelector('#themeToggle i');
+                
+                if (this.isLightMode) {
+                    body.classList.add('light-mode');
+                    themeIcon.className = 'fas fa-sun';
+                } else {
+                    body.classList.remove('light-mode');
+                    themeIcon.className = 'fas fa-moon';
+                }
+                
+                // Sauvegarder la préférence
+                localStorage.setItem('bookReaderTheme', this.isLightMode ? 'light' : 'dark');
+                
+                this.resetIdleTimer();
+                this.showBars();
+            }
+
+            loadThemePreference() {
+                const savedTheme = localStorage.getItem('bookReaderTheme');
+                if (savedTheme === 'light') {
+                    this.isLightMode = true;
+                    document.body.classList.add('light-mode');
+                    document.querySelector('#themeToggle i').className = 'fas fa-sun';
+                }
             }
 
             startIdleTimer() {
@@ -811,6 +1096,7 @@
         // Initialiser l'application
         window.addEventListener('DOMContentLoaded', () => {
             window.bookReader = new BookReader();
+            window.bookReader.loadThemePreference();
         });
 
         // Empêcher le menu contextuel sur mobile
