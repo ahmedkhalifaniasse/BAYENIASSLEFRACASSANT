@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecteur Élégant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BookReader - Application de Lecture</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -14,911 +14,810 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #121212;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a0a;
             color: #f5f5f5;
+            height: 100vh;
             overflow: hidden;
+            position: relative;
+            touch-action: pan-y;
+        }
+
+        #app {
             height: 100vh;
             width: 100vw;
             position: relative;
-            user-select: none;
+            transition: transform 0.5s ease;
         }
 
-        /* Conteneur principal */
-        #app {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        /* Pages */
         .page {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            display: none;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: #0d0d0d;
-            overflow: hidden;
+            padding: 20px;
             opacity: 0;
-            transform-style: preserve-3d;
-            transition: opacity 0.3s ease;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            background: #0a0a0a;
         }
 
         .page.active {
-            display: flex;
             opacity: 1;
-            z-index: 1;
+            visibility: visible;
         }
 
-        /* Animation de tourne-page */
-        .page.exit-left {
-            animation: pageExitLeft 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-            z-index: 2;
-        }
-
-        .page.enter-right {
-            animation: pageEnterRight 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-        }
-
-        .page.exit-right {
-            animation: pageExitRight 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-            z-index: 2;
-        }
-
-        .page.enter-left {
-            animation: pageEnterLeft 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-        }
-
-        @keyframes pageExitLeft {
-            0% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
-            100% { transform: rotateY(-90deg) translateZ(-100px); opacity: 0; }
-        }
-
-        @keyframes pageEnterRight {
-            0% { transform: rotateY(90deg) translateZ(-100px); opacity: 0; }
-            100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
-        }
-
-        @keyframes pageExitRight {
-            0% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
-            100% { transform: rotateY(90deg) translateZ(-100px); opacity: 0; }
-        }
-
-        @keyframes pageEnterLeft {
-            0% { transform: rotateY(-90deg) translateZ(-100px); opacity: 0; }
-            100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
-        }
-
-        /* Images de lecture */
-        .book-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background-color: #000;
-        }
-
-        /* En-tête */
-        .header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background: linear-gradient(to bottom, rgba(13, 13, 13, 0.95), rgba(13, 13, 13, 0.7));
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            z-index: 100;
-            transition: transform 0.5s ease;
-        }
-
-        .header.hidden {
-            transform: translateY(-100%);
-        }
-
-        .header-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #e0e0e0;
-            margin-left: 10px;
-        }
-
-        .header-icon {
-            font-size: 1.4rem;
-            color: #bb86fc;
-        }
-
-        /* Barre de navigation inférieure */
-        .nav-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 70px;
-            background: linear-gradient(to top, rgba(13, 13, 13, 0.95), rgba(13, 13, 13, 0.7));
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 100;
-            transition: transform 0.5s ease;
-        }
-
-        .nav-bar.hidden {
-            transform: translateY(100%);
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 12px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
+        .book-page {
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
             cursor: pointer;
         }
 
-        .nav-item.active {
-            background: rgba(187, 134, 252, 0.15);
-            transform: scale(1.05);
-        }
-
-        .nav-icon {
-            font-size: 1.4rem;
-            color: #bb86fc;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-item.active .nav-icon {
-            color: #ffffff;
-            transform: scale(1.1);
-        }
-
-        .nav-label {
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #b0b0b0;
-        }
-
-        .nav-item.active .nav-label {
-            color: #ffffff;
-        }
-
-        /* Contenu des pages de texte */
-        .page-content {
-            width: 90%;
+        .content-page {
             max-width: 800px;
-            height: calc(100% - 130px);
-            margin-top: 70px;
-            padding: 20px;
+            padding: 40px 20px;
             overflow-y: auto;
-            line-height: 1.6;
+            -webkit-overflow-scrolling: touch;
+            cursor: pointer;
         }
 
-        .page-title {
-            color: #bb86fc;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
+        .content-page h1 {
+            font-size: 2.8rem;
+            margin-bottom: 2rem;
+            color: #FFD700;
             text-align: center;
-            border-bottom: 2px solid rgba(187, 134, 252, 0.3);
-            padding-bottom: 10px;
+            font-weight: 300;
+            letter-spacing: 2px;
         }
 
-        .page-text {
-            font-size: 1.1rem;
-            color: #e0e0e0;
-            margin-bottom: 20px;
+        .content-page h2 {
+            font-size: 2.2rem;
+            margin: 2rem 0 1rem;
+            color: #FFD700;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 0.5rem;
+        }
+
+        .content-page p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
             text-align: justify;
         }
 
-        .page-text p {
-            margin-bottom: 15px;
-        }
-
-        /* Indicateur de navigation */
-        .nav-indicator {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 50px;
-            height: 50px;
-            background: rgba(187, 134, 252, 0.2);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 50;
-            transition: opacity 0.3s ease;
-        }
-
-        .nav-indicator.left {
-            left: 20px;
-        }
-
-        .nav-indicator.right {
-            right: 20px;
-        }
-
-        .nav-indicator.show {
-            opacity: 1;
-        }
-
-        .nav-indicator i {
-            font-size: 1.8rem;
-            color: #bb86fc;
-        }
-
-        /* Indicateur de page */
-        .page-indicator {
-            position: absolute;
-            top: 70px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            color: #e0e0e0;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            z-index: 90;
-            transition: opacity 0.5s ease;
-        }
-
-        /* État de chargement */
-        .loading {
-            position: absolute;
+        .navigation-overlay {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .nav-zone {
+            position: absolute;
+            background: transparent;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .prev-zone {
+            left: 0;
+            top: 0;
+            width: 40%;
+            height: 100%;
+        }
+
+        .next-zone {
+            right: 0;
+            top: 0;
+            width: 40%;
+            height: 100%;
+        }
+
+        .top-bar, .bottom-bar {
+            position: fixed;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.8) 50%, transparent 100%);
+            padding: 20px;
+            z-index: 101;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+        }
+
+        .top-bar {
+            top: 0;
+            transform: translateY(0);
+        }
+
+        .bottom-bar {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.8) 50%, transparent 100%);
+            transform: translateY(0);
+            padding: 15px 20px 25px;
+        }
+
+        .bars-hidden .top-bar {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+
+        .bars-hidden .bottom-bar {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+
+        .app-title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            color: #FFD700;
+        }
+
+        .page-indicator {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .nav-icons {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+            width: 100%;
+        }
+
+        .nav-icon {
+            font-size: 1.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 10px;
+            pointer-events: auto;
+        }
+
+        .nav-icon:hover {
+            color: #FFD700;
+            transform: translateY(-5px);
+        }
+
+        .nav-icon.active {
+            color: #FFD700;
+        }
+
+        .nav-icon.active::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: #FFD700;
+            border-radius: 50%;
+        }
+
+        .page-turn-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            display: flex;
             justify-content: center;
             align-items: center;
-            background: #121212;
-            z-index: 1000;
+        }
+
+        .page-turn-animation .page-turn {
+            width: 200px;
+            height: 300px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform-origin: left center;
+        }
+
+        .page-turn-animation .page-front,
+        .page-turn-animation .page-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+            border-radius: 5px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .page-turn-animation .page-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(45deg, #2a2a2a, #1a1a1a);
+        }
+
+        .turn-left {
+            animation: turnLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .turn-right {
+            animation: turnRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes turnLeft {
+            0% {
+                transform: rotateY(0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: rotateY(-180deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes turnRight {
+            0% {
+                transform: rotateY(0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: rotateY(180deg);
+                opacity: 0;
+            }
+        }
+
+        .sound-wave {
+            position: absolute;
+            bottom: 20%;
+            width: 100%;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+        }
+
+        .bar {
+            width: 6px;
+            height: 40px;
+            background: linear-gradient(to top, #FFD700, #ffed4e);
+            border-radius: 3px;
+            animation: soundWave 0.8s ease-in-out infinite;
+        }
+
+        .bar:nth-child(2) { animation-delay: 0.1s; }
+        .bar:nth-child(3) { animation-delay: 0.2s; }
+        .bar:nth-child(4) { animation-delay: 0.3s; }
+        .bar:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes soundWave {
+            0%, 100% { height: 20px; }
+            50% { height: 80px; }
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
             transition: opacity 0.5s ease;
         }
 
-        .loading.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .spinner {
+        .loader {
             width: 60px;
             height: 60px;
-            border: 5px solid rgba(187, 134, 252, 0.2);
+            border: 3px solid rgba(255, 215, 0, 0.3);
+            border-top-color: #FFD700;
             border-radius: 50%;
-            border-top-color: #bb86fc;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
 
-        /* Animation sonore (visuelle) */
-        .sound-effect {
-            position: absolute;
-            width: 100px;
-            height: 100px;
+        .touch-hint {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            text-align: center;
+            animation: pulse 2s infinite;
             pointer-events: none;
-            z-index: 10;
-            opacity: 0;
         }
 
-        .sound-effect.show {
-            animation: soundWave 0.8s ease-out forwards;
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
         }
 
-        @keyframes soundWave {
-            0% { transform: scale(0.1); opacity: 0.7; }
-            100% { transform: scale(1.5); opacity: 0; }
+        @media (max-width: 768px) {
+            .content-page h1 { font-size: 2.2rem; }
+            .content-page h2 { font-size: 1.8rem; }
+            .content-page p { font-size: 1.1rem; }
+            .nav-icons { gap: 25px; }
+            .nav-icon { font-size: 1.5rem; }
+        }
+
+        @media (max-height: 600px) {
+            .bottom-bar { padding: 10px 20px 15px; }
+            .touch-hint { bottom: 80px; }
         }
     </style>
 </head>
 <body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader"></div>
+    </div>
+
+    <div class="page-turn-animation" id="pageTurnAnimation">
+        <div class="page-turn">
+            <div class="page-front"></div>
+            <div class="page-back"></div>
+        </div>
+        <div class="sound-wave" id="soundWave">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+    </div>
+
+    <div class="touch-hint" id="touchHint">
+        <i class="fas fa-arrows-alt-h"></i> Glisser pour tourner les pages
+    </div>
+
+    <div class="navigation-overlay">
+        <div class="nav-zone prev-zone" id="prevZone"></div>
+        <div class="nav-zone next-zone" id="nextZone"></div>
+    </div>
+
+    <div class="top-bar" id="topBar">
+        <div class="app-title">BookReader</div>
+        <div class="page-indicator" id="pageIndicator">Page 1/13</div>
+    </div>
+
+    <div class="bottom-bar" id="bottomBar">
+        <div class="nav-icons">
+            <div class="nav-icon active" data-page="home">
+                <i class="fas fa-home"></i>
+            </div>
+            <div class="nav-icon" data-page="reading">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="nav-icon" data-page="bio">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="nav-icon" data-page="privacy">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+        </div>
+    </div>
+
     <div id="app">
-        <!-- Écran de chargement -->
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Chargement de l'application...</p>
+        <!-- Page d'accueil (Couverture) -->
+        <div class="page book-page active" id="home" 
+             style="background-image: url('https://i.postimg.cc/Kc9mFHsm/1.png');"></div>
+
+        <!-- Pages de lecture -->
+        <div class="page book-page" id="reading" 
+             style="background-image: url('https://i.postimg.cc/ykB2vQJM/2.jpg');"></div>
+
+        <!-- Pages de lecture supplémentaires -->
+        <div class="page book-page" id="page3" 
+             style="background-image: url('https://i.postimg.cc/Vd12DGSh/3.jpg');"></div>
+        <div class="page book-page" id="page4" 
+             style="background-image: url('https://i.postimg.cc/RN92Xs32/4.jpg');"></div>
+        <div class="page book-page" id="page5" 
+             style="background-image: url('https://i.postimg.cc/KRFCJqkX/5.jpg');"></div>
+        <div class="page book-page" id="page6" 
+             style="background-image: url('https://i.postimg.cc/HVHFBZcm/6.jpg');"></div>
+        <div class="page book-page" id="page7" 
+             style="background-image: url('https://i.postimg.cc/7fDjmsGw/7.jpg');"></div>
+        <div class="page book-page" id="page8" 
+             style="background-image: url('https://i.postimg.cc/D8FRBjJ7/8.jpg');"></div>
+        <div class="page book-page" id="page9" 
+             style="background-image: url('https://i.postimg.cc/Tp9FSVmz/9.jpg');"></div>
+        <div class="page book-page" id="page10" 
+             style="background-image: url('https://i.postimg.cc/Tp9FSVg8/10.jpg');"></div>
+        <div class="page book-page" id="page11" 
+             style="background-image: url('https://i.postimg.cc/1fH2TGwy/11.jpg');"></div>
+        <div class="page book-page" id="page12" 
+             style="background-image: url('https://i.postimg.cc/mtwJqYCh/12.jpg');"></div>
+        <div class="page book-page" id="page13" 
+             style="background-image: url('https://i.postimg.cc/4m5qM6VK/13.jpg');"></div>
+
+        <!-- Page Biographie -->
+        <div class="page content-page" id="bio">
+            <h1>Biographie de l'Auteur</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            
+            <h2>Formation</h2>
+            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            
+            <h2>Parcours Professionnel</h2>
+            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+            
+            <h2>Récompenses</h2>
+            <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
         </div>
 
-        <!-- Page d'accueil (couverture) -->
-        <div class="page active" id="page-home">
-            <div class="header">
-                <i class="fas fa-book header-icon"></i>
-                <h1 class="header-title">Lecteur Élégant</h1>
-            </div>
-            <img src="https://i.postimg.cc/1fPbJCgB/1.jpg" alt="Couverture du livre" class="book-image">
-            <div class="nav-bar">
-                <div class="nav-item active" data-page="home">
-                    <i class="fas fa-home nav-icon"></i>
-                    <span class="nav-label">Accueil</span>
-                </div>
-                <div class="nav-item" data-page="reading">
-                    <i class="fas fa-book-open nav-icon"></i>
-                    <span class="nav-label">Lecture</span>
-                </div>
-                <div class="nav-item" data-page="bio">
-                    <i class="fas fa-user nav-icon"></i>
-                    <span class="nav-label">Biographie</span>
-                </div>
-                <div class="nav-item" data-page="privacy">
-                    <i class="fas fa-shield-alt nav-icon"></i>
-                    <span class="nav-label">Confidentialité</span>
-                </div>
-            </div>
-            <div class="page-indicator" id="page-indicator">Couverture</div>
+        <!-- Page Politique de Confidentialité -->
+        <div class="page content-page" id="privacy">
+            <h1>Politique de Confidentialité</h1>
+            <p>Dernière mise à jour : 1er Janvier 2024</p>
+            
+            <h2>Collecte des Informations</h2>
+            <p>Nous collectons uniquement les informations nécessaires au fonctionnement de l'application. Aucune donnée personnelle n'est stockée sur nos serveurs.</p>
+            
+            <h2>Utilisation des Données</h2>
+            <p>Les données de lecture (progression, préférences) sont stockées localement sur votre appareil. Ces informations ne quittent jamais votre appareil.</p>
+            
+            <h2>Cookies</h2>
+            <p>Cette application n'utilise pas de cookies de suivi. Seuls les cookies techniques essentiels au fonctionnement peuvent être utilisés.</p>
+            
+            <h2>Vos Droits</h2>
+            <p>Vous avez le droit d'accéder à vos données, de les rectifier ou de les supprimer. Pour exercer ces droits, contactez-nous.</p>
+            
+            <h2>Contact</h2>
+            <p>Pour toute question concernant cette politique de confidentialité, contactez-nous à : privacy@bookreader.app</p>
         </div>
-
-        <!-- Page de lecture -->
-        <div class="page" id="page-reading">
-            <div class="header">
-                <i class="fas fa-book-open header-icon"></i>
-                <h1 class="header-title">Lecture</h1>
-            </div>
-            <div id="reading-content">
-                <!-- Les images seront chargées ici dynamiquement -->
-            </div>
-            <div class="nav-bar">
-                <div class="nav-item" data-page="home">
-                    <i class="fas fa-home nav-icon"></i>
-                    <span class="nav-label">Accueil</span>
-                </div>
-                <div class="nav-item active" data-page="reading">
-                    <i class="fas fa-book-open nav-icon"></i>
-                    <span class="nav-label">Lecture</span>
-                </div>
-                <div class="nav-item" data-page="bio">
-                    <i class="fas fa-user nav-icon"></i>
-                    <span class="nav-label">Biographie</span>
-                </div>
-                <div class="nav-item" data-page="privacy">
-                    <i class="fas fa-shield-alt nav-icon"></i>
-                    <span class="nav-label">Confidentialité</span>
-                </div>
-            </div>
-            <div class="page-indicator" id="reading-indicator">Page 1/13</div>
-        </div>
-
-        <!-- Page biographie -->
-        <div class="page" id="page-bio">
-            <div class="header">
-                <i class="fas fa-user header-icon"></i>
-                <h1 class="header-title">Biographie</h1>
-            </div>
-            <div class="page-content">
-                <h2 class="page-title">À propos de l'auteur</h2>
-                <div class="page-text">
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-                    <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
-                    <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.</p>
-                </div>
-            </div>
-            <div class="nav-bar">
-                <div class="nav-item" data-page="home">
-                    <i class="fas fa-home nav-icon"></i>
-                    <span class="nav-label">Accueil</span>
-                </div>
-                <div class="nav-item" data-page="reading">
-                    <i class="fas fa-book-open nav-icon"></i>
-                    <span class="nav-label">Lecture</span>
-                </div>
-                <div class="nav-item active" data-page="bio">
-                    <i class="fas fa-user nav-icon"></i>
-                    <span class="nav-label">Biographie</span>
-                </div>
-                <div class="nav-item" data-page="privacy">
-                    <i class="fas fa-shield-alt nav-icon"></i>
-                    <span class="nav-label">Confidentialité</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Page politique de confidentialité -->
-        <div class="page" id="page-privacy">
-            <div class="header">
-                <i class="fas fa-shield-alt header-icon"></i>
-                <h1 class="header-title">Politique de confidentialité</h1>
-            </div>
-            <div class="page-content">
-                <h2 class="page-title">Protection de vos données</h2>
-                <div class="page-text">
-                    <p>Votre vie privée est importante pour nous. Cette politique de confidentialité explique quelles informations nous collectons, comment nous les utilisons et les partageons.</p>
-                    <p><strong>Informations collectées :</strong> Nous collectons des informations que vous nous fournissez directement, ainsi que des informations sur votre utilisation de notre application.</p>
-                    <p><strong>Utilisation des informations :</strong> Les informations que nous collectons sont utilisées pour fournir, maintenir et améliorer nos services, pour communiquer avec vous, et pour développer de nouveaux services.</p>
-                    <p><strong>Partage des informations :</strong> Nous ne partageons pas vos informations personnelles avec des entreprises, organisations ou individus en dehors de notre organisation, sauf dans les cas suivants : avec votre consentement, pour des raisons légales, ou pour protéger nos droits.</p>
-                    <p><strong>Sécurité :</strong> Nous nous engageons à protéger la sécurité de vos informations personnelles et utilisons des mesures de sécurité appropriées pour les protéger contre tout accès non autorisé, altération, divulgation ou destruction.</p>
-                    <p><strong>Modifications :</strong> Nous pouvons modifier cette politique de confidentialité de temps à autre. Nous vous informerons de toute modification en publiant la nouvelle politique sur cette page.</p>
-                </div>
-            </div>
-            <div class="nav-bar">
-                <div class="nav-item" data-page="home">
-                    <i class="fas fa-home nav-icon"></i>
-                    <span class="nav-label">Accueil</span>
-                </div>
-                <div class="nav-item" data-page="reading">
-                    <i class="fas fa-book-open nav-icon"></i>
-                    <span class="nav-label">Lecture</span>
-                </div>
-                <div class="nav-item" data-page="bio">
-                    <i class="fas fa-user nav-icon"></i>
-                    <span class="nav-label">Biographie</span>
-                </div>
-                <div class="nav-item active" data-page="privacy">
-                    <i class="fas fa-shield-alt nav-icon"></i>
-                    <span class="nav-label">Confidentialité</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Indicateurs de navigation par gestes -->
-        <div class="nav-indicator left" id="nav-left">
-            <i class="fas fa-chevron-left"></i>
-        </div>
-        <div class="nav-indicator right" id="nav-right">
-            <i class="fas fa-chevron-right"></i>
-        </div>
-
-        <!-- Effet sonore visuel -->
-        <div class="sound-effect" id="sound-effect"></div>
     </div>
 
     <script>
-        // Images du livre (dans l'ordre)
-        const bookImages = [
-            "https://i.postimg.cc/1fPbJCgB/1.jpg",  // Couverture
-            "https://i.postimg.cc/ykB2vQJM/2.jpg",
-            "https://i.postimg.cc/Vd12DGSh/3.jpg",
-            "https://i.postimg.cc/RN92Xs32/4.jpg",
-            "https://i.postimg.cc/KRFCJqkX/5.jpg",
-            "https://i.postimg.cc/HVHFBZcm/6.jpg",
-            "https://i.postimg.cc/7fDjmsGw/7.jpg",
-            "https://i.postimg.cc/D8FRBjJ7/8.jpg",
-            "https://i.postimg.cc/Tp9FSVmz/9.jpg",
-            "https://i.postimg.cc/Tp9FSVg8/10.jpg",
-            "https://i.postimg.cc/1fH2TGwy/11.jpg",
-            "https://i.postimg.cc/mtwJqYCh/12.jpg",
-            "https://i.postimg.cc/4m5qM6VK/13.jpg"
-        ];
+        class BookReader {
+            constructor() {
+                this.currentPage = 1;
+                this.totalPages = 13;
+                this.currentSection = 'home';
+                this.isAnimating = false;
+                this.barsVisible = true;
+                this.hideBarsTimeout = null;
+                this.pages = ['home', 'reading', 'page3', 'page4', 'page5', 'page6', 'page7', 
+                             'page8', 'page9', 'page10', 'page11', 'page12', 'page13', 'bio', 'privacy'];
+                this.sections = ['home', 'reading', 'bio', 'privacy'];
+                this.pageImages = [
+    'https://i.postimg.cc/Kc9mFHsm/1.png',
+    
+    'https://i.postimg.cc/xTcnd3Wv/2.png',
+    'https://i.postimg.cc/yYtB3SHv/3.png',
+    'https://i.postimg.cc/zXV8fF9S/4.png',
+    'https://i.postimg.cc/ZKC4qx1p/5.png',
+    'https://i.postimg.cc/gkQdL6pn/6.png',
+    'https://i.postimg.cc/0NqscRrf/7.png',
+    'https://i.postimg.cc/hGqBpWfn/8.png',
+    'https://i.postimg.cc/xdS2tDcV/9.png',
+                  'https://i.postimg.cc/vmLdKqVM/10.png',
+    'https://i.postimg.cc/DzdKNjX4/11.png',
+    'https://i.postimg.cc/85pVgRR5/13.png'
+];
 
-        // Variables d'état de l'application
-        let currentPage = 'home';
-        let currentReadingPage = 0;
-        let isAnimating = false;
-        let hideUI = false;
-        let inactivityTimer;
-        const INACTIVITY_DELAY = 7000; // 7 secondes
 
-        // Références aux éléments DOM
-        const app = document.getElementById('app');
-        const loadingScreen = document.getElementById('loading');
-        const pages = {
-            home: document.getElementById('page-home'),
-            reading: document.getElementById('page-reading'),
-            bio: document.getElementById('page-bio'),
-            privacy: document.getElementById('page-privacy')
-        };
-        const readingContent = document.getElementById('reading-content');
-        const navItems = document.querySelectorAll('.nav-item');
-        const headers = document.querySelectorAll('.header');
-        const navBars = document.querySelectorAll('.nav-bar');
-        const pageIndicator = document.getElementById('page-indicator');
-        const readingIndicator = document.getElementById('reading-indicator');
-        const navLeft = document.getElementById('nav-left');
-        const navRight = document.getElementById('nav-right');
-        const soundEffect = document.getElementById('sound-effect');
+                this.init();
+            }
 
-        // Initialisation de l'application
-        function initApp() {
-            // Simuler un temps de chargement
-            setTimeout(() => {
-                loadingScreen.classList.add('hidden');
-                
-                // Initialiser le contenu de lecture
-                initReadingContent();
-                
-                // Démarrer le timer d'inactivité
-                resetInactivityTimer();
-                
-                // Ajouter les écouteurs d'événements
-                setupEventListeners();
-            }, 1500);
-        }
+            init() {
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loadingScreen').style.display = 'none';
+                        this.setupEventListeners();
+                        this.startIdleTimer();
+                        this.updatePageIndicator();
+                    }, 500);
+                }, 1000);
 
-        // Initialiser le contenu de lecture
-        function initReadingContent() {
-            readingContent.innerHTML = '';
-            
-            bookImages.forEach((imageSrc, index) => {
-                const img = document.createElement('img');
-                img.src = imageSrc;
-                img.alt = `Page ${index + 1}`;
-                img.className = 'book-image';
-                img.style.display = index === 0 ? 'block' : 'none';
-                readingContent.appendChild(img);
-            });
-            
-            updateReadingIndicator();
-        }
+                setTimeout(() => {
+                    document.getElementById('touchHint').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('touchHint').style.display = 'none';
+                    }, 500);
+                }, 3000);
+            }
 
-        // Mettre à jour l'indicateur de page de lecture
-        function updateReadingIndicator() {
-            readingIndicator.textContent = `Page ${currentReadingPage + 1}/${bookImages.length}`;
-        }
-
-        // Configurer les écouteurs d'événements
-        function setupEventListeners() {
-            // Navigation par clic sur les éléments de navigation
-            navItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    const page = item.getAttribute('data-page');
-                    navigateToPage(page);
-                    resetInactivityTimer();
+            setupEventListeners() {
+                // Navigation tactile - zones de clic
+                document.getElementById('prevZone').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.navigate('prev');
                 });
-            });
-
-            // Navigation par gestes (défilement)
-            let touchStartX = 0;
-            let touchStartY = 0;
-            let touchEndX = 0;
-            let touchEndY = 0;
-            
-            app.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-                touchStartY = e.changedTouches[0].screenY;
-                resetInactivityTimer();
-            }, { passive: true });
-            
-            app.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                touchEndY = e.changedTouches[0].screenY;
-                handleSwipe();
-                resetInactivityTimer();
-            }, { passive: true });
-            
-            // Navigation par souris (cliquer et glisser)
-            let mouseDownX = 0;
-            let mouseDownY = 0;
-            let mouseUpX = 0;
-            let mouseUpY = 0;
-            
-            app.addEventListener('mousedown', (e) => {
-                mouseDownX = e.clientX;
-                mouseDownY = e.clientY;
-                resetInactivityTimer();
-            });
-            
-            app.addEventListener('mouseup', (e) => {
-                mouseUpX = e.clientX;
-                mouseUpY = e.clientY;
-                handleMouseSwipe();
-                resetInactivityTimer();
-            });
-            
-            // Navigation par clavier (flèches)
-            document.addEventListener('keydown', (e) => {
-                if (isAnimating) return;
                 
-                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                    if (currentPage === 'reading') {
-                        nextReadingPage();
-                    } else if (currentPage === 'home') {
-                        navigateToPage('reading');
-                    }
-                    resetInactivityTimer();
-                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                    if (currentPage === 'reading') {
-                        prevReadingPage();
-                    }
-                    resetInactivityTimer();
-                }
-            });
-            
-            // Mouvement de souris pour réinitialiser le timer d'inactivité
-            app.addEventListener('mousemove', resetInactivityTimer);
-            app.addEventListener('touchmove', resetInactivityTimer);
-        }
+                document.getElementById('nextZone').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.navigate('next');
+                });
 
-        // Gérer les gestes de balayage tactile
-        function handleSwipe() {
-            const deltaX = touchEndX - touchStartX;
-            const deltaY = touchEndY - touchStartY;
-            
-            // Seuil minimal pour considérer un geste
-            const minSwipeDistance = 50;
-            
-            // Vérifier si c'est un balayage horizontal ou vertical
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                // Balayage horizontal
-                if (Math.abs(deltaX) > minSwipeDistance) {
-                    if (deltaX > 0) {
-                        // Balayage vers la droite (page précédente)
-                        if (currentPage === 'reading') {
-                            prevReadingPage();
-                        }
+                // Cliquer sur l'écran pour afficher/masquer les barres
+                document.getElementById('app').addEventListener('click', (e) => {
+                    // Ne pas déclencher si on clique sur les icônes de navigation
+                    if (e.target.closest('.nav-icon') || e.target.closest('.nav-zone')) {
+                        return;
+                    }
+                    
+                    if (this.barsVisible) {
+                        this.hideBars();
                     } else {
-                        // Balayage vers la gauche (page suivante)
-                        if (currentPage === 'reading') {
-                            nextReadingPage();
-                        } else if (currentPage === 'home') {
-                            navigateToPage('reading');
+                        this.showBars();
+                    }
+                });
+
+                // Navigation clavier
+                document.addEventListener('keydown', (e) => {
+                    if (this.isAnimating) return;
+                    
+                    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                        this.navigate('prev');
+                    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                        this.navigate('next');
+                    }
+                });
+
+                // Navigation par défilement (wheel)
+                let wheelTimeout;
+                document.addEventListener('wheel', (e) => {
+                    if (this.isAnimating) return;
+                    
+                    clearTimeout(wheelTimeout);
+                    wheelTimeout = setTimeout(() => {
+                        if (e.deltaY > 0 || e.deltaX > 0) {
+                            this.navigate('next');
+                        } else {
+                            this.navigate('prev');
+                        }
+                    }, 50);
+                });
+
+                // Navigation tactile (swipe)
+                let touchStartX = 0;
+                let touchStartY = 0;
+                let touchEndX = 0;
+                let touchEndY = 0;
+                
+                document.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                    touchStartY = e.changedTouches[0].screenY;
+                }, { passive: true });
+                
+                document.addEventListener('touchend', (e) => {
+                    if (this.isAnimating) return;
+                    
+                    touchEndX = e.changedTouches[0].screenX;
+                    touchEndY = e.changedTouches[0].screenY;
+                    
+                    const diffX = touchEndX - touchStartX;
+                    const diffY = touchEndY - touchStartY;
+                    
+                    // Seuil pour détecter un swipe
+                    const threshold = 50;
+                    
+                    // Navigation horizontale (gauche/droite)
+                    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > threshold) {
+                        if (diffX > 0) {
+                            this.navigate('prev'); // Swipe vers la droite
+                        } else {
+                            this.navigate('next'); // Swipe vers la gauche
                         }
                     }
-                }
-            } else {
-                // Balayage vertical
-                if (Math.abs(deltaY) > minSwipeDistance) {
-                    if (deltaY > 0) {
-                        // Balayage vers le bas (page suivante)
-                        if (currentPage === 'reading') {
-                            nextReadingPage();
-                        } else if (currentPage === 'home') {
-                            navigateToPage('reading');
-                        }
-                    } else {
-                        // Balayage vers le haut (page précédente)
-                        if (currentPage === 'reading') {
-                            prevReadingPage();
+                    // Navigation verticale (haut/bas)
+                    else if (Math.abs(diffY) > threshold) {
+                        if (diffY > 0) {
+                            this.navigate('prev'); // Swipe vers le bas
+                        } else {
+                            this.navigate('next'); // Swipe vers le haut
                         }
                     }
-                }
-            }
-        }
+                }, { passive: true });
 
-        // Gérer les gestes de souris (cliquer et glisser)
-        function handleMouseSwipe() {
-            const deltaX = mouseUpX - mouseDownX;
-            const deltaY = mouseUpY - mouseDownY;
-            
-            // Seuil minimal pour considérer un geste
-            const minSwipeDistance = 50;
-            
-            // Vérifier si c'est un balayage horizontal ou vertical
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                // Balayage horizontal
-                if (Math.abs(deltaX) > minSwipeDistance) {
-                    if (deltaX > 0) {
-                        // Balayage vers la droite (page précédente)
-                        if (currentPage === 'reading') {
-                            prevReadingPage();
-                        }
-                    } else {
-                        // Balayage vers la gauche (page suivante)
-                        if (currentPage === 'reading') {
-                            nextReadingPage();
-                        } else if (currentPage === 'home') {
-                            navigateToPage('reading');
-                        }
-                    }
-                }
-            } else {
-                // Balayage vertical
-                if (Math.abs(deltaY) > minSwipeDistance) {
-                    if (deltaY > 0) {
-                        // Balayage vers le bas (page suivante)
-                        if (currentPage === 'reading') {
-                            nextReadingPage();
-                        } else if (currentPage === 'home') {
-                            navigateToPage('reading');
-                        }
-                    } else {
-                        // Balayage vers le haut (page précédente)
-                        if (currentPage === 'reading') {
-                            prevReadingPage();
-                        }
-                    }
-                }
-            }
-        }
+                // Navigation par icônes
+                document.querySelectorAll('.nav-icon').forEach(icon => {
+                    icon.addEventListener('click', (e) => {
+                        const page = e.currentTarget.dataset.page;
+                        this.switchSection(page);
+                    });
+                });
 
-        // Naviguer vers une page spécifique
-        function navigateToPage(pageId) {
-            if (isAnimating || currentPage === pageId) return;
-            
-            const oldPage = pages[currentPage];
-            const newPage = pages[pageId];
-            
-            // Mettre à jour la navigation active
-            navItems.forEach(item => {
-                if (item.getAttribute('data-page') === pageId) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-            
-            // Si on navigue vers la page de lecture depuis l'accueil
-            if (currentPage === 'home' && pageId === 'reading') {
-                playPageTurnAnimation(oldPage, newPage, 'right');
-            } 
-            // Si on revient à l'accueil depuis la lecture
-            else if (currentPage === 'reading' && pageId === 'home') {
-                playPageTurnAnimation(oldPage, newPage, 'left');
+                // Reset idle timer on interaction
+                document.addEventListener('mousemove', () => this.resetIdleTimer());
+                document.addEventListener('touchstart', () => this.resetIdleTimer());
+                document.addEventListener('keydown', () => this.resetIdleTimer());
             }
-            // Pour les autres navigations
-            else {
-                oldPage.classList.remove('active');
-                newPage.classList.add('active');
-            }
-            
-            currentPage = pageId;
-            resetInactivityTimer();
-        }
 
-        // Jouer l'animation de tourne-page
-        function playPageTurnAnimation(oldPage, newPage, direction) {
-            if (isAnimating) return;
-            
-            isAnimating = true;
-            
-            // Afficher l'indicateur de navigation
-            if (direction === 'right') {
-                navRight.classList.add('show');
-            } else {
-                navLeft.classList.add('show');
-            }
-            
-            // Jouer l'effet sonore visuel
-            playSoundEffect();
-            
-            // Configurer les animations
-            if (direction === 'right') {
-                oldPage.classList.add('exit-left');
-                newPage.classList.add('enter-right');
-            } else {
-                oldPage.classList.add('exit-right');
-                newPage.classList.add('enter-left');
-            }
-            
-            // Afficher la nouvelle page après le début de l'animation
-            setTimeout(() => {
-                newPage.classList.add('active');
-            }, 100);
-            
-            // Nettoyer après l'animation
-            setTimeout(() => {
-                oldPage.classList.remove('active', 'exit-left', 'exit-right');
-                newPage.classList.remove('enter-right', 'enter-left');
+            navigate(direction) {
+                if (this.isAnimating) return;
                 
-                if (direction === 'right') {
-                    navRight.classList.remove('show');
-                } else {
-                    navLeft.classList.remove('show');
-                }
-                
-                isAnimating = false;
-            }, 700);
-        }
-
-        // Page de lecture suivante
-        function nextReadingPage() {
-            if (currentReadingPage < bookImages.length - 1) {
-                // Animation vers la page suivante
-                const currentImg = readingContent.children[currentReadingPage];
-                const nextImg = readingContent.children[currentReadingPage + 1];
-                
-                playReadingPageAnimation(currentImg, nextImg, 'next');
-                currentReadingPage++;
-                updateReadingIndicator();
-                resetInactivityTimer();
-            }
-        }
-
-        // Page de lecture précédente
-        function prevReadingPage() {
-            if (currentReadingPage > 0) {
-                // Animation vers la page précédente
-                const currentImg = readingContent.children[currentReadingPage];
-                const prevImg = readingContent.children[currentReadingPage - 1];
-                
-                playReadingPageAnimation(currentImg, prevImg, 'prev');
-                currentReadingPage--;
-                updateReadingIndicator();
-                resetInactivityTimer();
-            }
-        }
-
-        // Animation de changement de page de lecture
-        function playReadingPageAnimation(currentImg, nextImg, direction) {
-            if (isAnimating) return;
-            
-            isAnimating = true;
-            
-            // Afficher l'indicateur de navigation
-            if (direction === 'next') {
-                navRight.classList.add('show');
-            } else {
-                navLeft.classList.add('show');
-            }
-            
-            // Jouer l'effet sonore visuel
-            playSoundEffect();
-            
-            // Afficher la nouvelle image
-            nextImg.style.display = 'block';
-            
-            // Animer la transition
-            if (direction === 'next') {
-                currentImg.style.animation = 'pageExitLeft 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards';
-                nextImg.style.animation = 'pageEnterRight 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards';
-            } else {
-                currentImg.style.animation = 'pageExitRight 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards';
-                nextImg.style.animation = 'pageEnterLeft 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards';
-            }
-            
-            // Cacher l'ancienne image après l'animation
-            setTimeout(() => {
-                currentImg.style.display = 'none';
-                currentImg.style.animation = '';
-                nextImg.style.animation = '';
+                this.resetIdleTimer();
+                this.showBars();
                 
                 if (direction === 'next') {
-                    navRight.classList.remove('show');
+                    if (this.currentSection === 'home') {
+                        // Depuis la couverture, aller à la lecture
+                        this.switchSection('reading');
+                    } else if (this.currentSection === 'reading') {
+                        if (this.currentPage < this.totalPages) {
+                            this.currentPage++;
+                            this.showPageTurnAnimation('right');
+                            this.updatePage();
+                        }
+                    }
                 } else {
-                    navLeft.classList.remove('show');
+                    if (this.currentSection === 'reading') {
+                        if (this.currentPage > 2) {
+                            this.currentPage--;
+                            this.showPageTurnAnimation('left');
+                            this.updatePage();
+                        } else if (this.currentPage === 2) {
+                            // Revenir à la couverture depuis la première page de lecture
+                            this.switchSection('home');
+                        }
+                    }
+                }
+            }
+
+            switchSection(section) {
+                if (this.isAnimating || this.currentSection === section) return;
+                
+                this.resetIdleTimer();
+                this.showBars();
+                
+                // Mettre à jour les icônes actives
+                document.querySelectorAll('.nav-icon').forEach(icon => {
+                    icon.classList.remove('active');
+                });
+                document.querySelector(`[data-page="${section}"]`).classList.add('active');
+                
+                this.currentSection = section;
+                
+                if (section === 'reading') {
+                    this.currentPage = 2; // Page de lecture
+                    this.updatePageIndicator();
+                } else if (section === 'home') {
+                    this.currentPage = 1;
+                    this.updatePageIndicator();
                 }
                 
-                isAnimating = false;
-            }, 700);
-        }
-
-        // Jouer un effet sonore visuel
-        function playSoundEffect() {
-            soundEffect.classList.remove('show');
-            void soundEffect.offsetWidth; // Réinitialiser l'animation
-            soundEffect.classList.add('show');
-        }
-
-        // Réinitialiser le timer d'inactivité
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            
-            // Afficher l'UI si elle est cachée
-            if (hideUI) {
-                showUI();
+                // Masquer toutes les pages
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                
+                // Afficher la page sélectionnée
+                document.getElementById(section).classList.add('active');
             }
-            
-            // Démarrer un nouveau timer
-            inactivityTimer = setTimeout(hideUI, INACTIVITY_DELAY);
+
+            showPageTurnAnimation(direction) {
+                this.isAnimating = true;
+                const animation = document.getElementById('pageTurnAnimation');
+                const soundWave = document.getElementById('soundWave');
+                const pageTurn = animation.querySelector('.page-turn');
+                
+                // Réinitialiser l'animation
+                animation.style.opacity = '1';
+                pageTurn.className = 'page-turn';
+                soundWave.style.opacity = '0';
+                
+                // Jouer l'animation de tournage
+                setTimeout(() => {
+                    pageTurn.classList.add(direction === 'left' ? 'turn-left' : 'turn-right');
+                    
+                    // Afficher l'onde sonore
+                    setTimeout(() => {
+                        soundWave.style.opacity = '1';
+                    }, 200);
+                    
+                    // Cacher l'animation
+                    setTimeout(() => {
+                        animation.style.opacity = '0';
+                        setTimeout(() => {
+                            soundWave.style.opacity = '0';
+                            this.isAnimating = false;
+                        }, 300);
+                    }, 800);
+                }, 50);
+            }
+
+            updatePage() {
+                this.updatePageIndicator();
+                
+                // Mettre à jour l'image de la page de lecture
+                if (this.currentPage >= 2 && this.currentPage <= 13) {
+                    const pageId = this.currentPage === 2 ? 'reading' : `page${this.currentPage}`;
+                    const pageElement = document.getElementById(pageId);
+                    if (pageElement) {
+                        pageElement.style.backgroundImage = `url('${this.pageImages[this.currentPage - 1]}')`;
+                        
+                        // Masquer toutes les pages de lecture
+                        document.querySelectorAll('.book-page').forEach(page => {
+                            page.classList.remove('active');
+                        });
+                        
+                        // Afficher la page actuelle
+                        pageElement.classList.add('active');
+                    }
+                }
+            }
+
+            updatePageIndicator() {
+                const indicator = document.getElementById('pageIndicator');
+                if (this.currentSection === 'reading') {
+                    indicator.textContent = `Page ${this.currentPage - 1}/${this.totalPages - 1}`;
+                } else {
+                    indicator.textContent = this.getSectionTitle(this.currentSection);
+                }
+            }
+
+            getSectionTitle(section) {
+                const titles = {
+                    'home': 'Couverture',
+                    'reading': 'Lecture',
+                    'bio': 'Biographie',
+                    'privacy': 'Confidentialité'
+                };
+                return titles[section] || section;
+            }
+
+            startIdleTimer() {
+                this.hideBarsTimeout = setTimeout(() => {
+                    this.hideBars();
+                }, 7000);
+            }
+
+            resetIdleTimer() {
+                clearTimeout(this.hideBarsTimeout);
+                this.startIdleTimer();
+            }
+
+            hideBars() {
+                if (!this.barsVisible) return;
+                
+                document.body.classList.add('bars-hidden');
+                this.barsVisible = false;
+            }
+
+            showBars() {
+                if (this.barsVisible) return;
+                
+                document.body.classList.remove('bars-hidden');
+                this.barsVisible = true;
+                this.resetIdleTimer();
+            }
         }
 
-        // Masquer l'interface utilisateur
-        function hideUI() {
-            hideUI = true;
-            headers.forEach(header => header.classList.add('hidden'));
-            navBars.forEach(navBar => navBar.classList.add('hidden'));
-            
-            // Masquer également les indicateurs de page
-            if (pageIndicator) pageIndicator.style.opacity = '0';
-            if (readingIndicator) readingIndicator.style.opacity = '0';
-        }
+        // Initialiser l'application
+        window.addEventListener('DOMContentLoaded', () => {
+            window.bookReader = new BookReader();
+        });
 
-        // Afficher l'interface utilisateur
-        function showUI() {
-            hideUI = false;
-            headers.forEach(header => header.classList.remove('hidden'));
-            navBars.forEach(navBar => navBar.classList.remove('hidden'));
-            
-            // Afficher les indicateurs de page
-            if (pageIndicator) pageIndicator.style.opacity = '1';
-            if (readingIndicator) readingIndicator.style.opacity = '1';
-        }
-
-        // Démarrer l'application
-        window.addEventListener('DOMContentLoaded', initApp);
+        // Empêcher le menu contextuel sur mobile
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            return false;
+        });
     </script>
 </body>
 </html>
