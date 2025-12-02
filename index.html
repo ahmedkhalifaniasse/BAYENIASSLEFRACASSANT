@@ -197,16 +197,23 @@
             opacity: 0;
         }
 
-        .app-title {
-            font-size: 1.5rem;
-            font-weight: 300;
-            letter-spacing: 3px;
-            color: #FFD700;
-        }
+      .app-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #FFD700; /* Garde cette couleur */
+    margin-top: 8px; /* Pour descendre un peu le titre */
+}
 
-        body.light-mode .app-title {
-            color: #2c3e50;
-        }
+/* SUPPRIME ou COMENTE cette règle : */
+/* body.light-mode .app-title {
+    color: #2c3e50;
+} */
+
+/* A la place, garde la même couleur en mode clair : */
+body.light-mode .app-title {
+    color: #FFD700; /* Même couleur jaune or */
+}
 
       /* Option 1: Supprime complètement la classe */
 .page-indicator {
@@ -272,29 +279,39 @@
             color: #2c3e50;
         }
 
-        .nav-icon.active {
-            color: #FFD700;
-        }
+    .nav-icon.active {
+    color: #FFD700;
+}
 
-        body.light-mode .nav-icon.active {
-            color: #2c3e50;
-        }
+.nav-icon.active::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: #FFD700;
+    border-radius: 50%;
+}
 
-        .nav-icon.active::after {
-            content: '';
-            position: absolute;
-            bottom: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
-            background: #FFD700;
-            border-radius: 50%;
-        }
+/* SUPPRIME ou COMENTE ces règles : */
+/* body.light-mode .nav-icon.active {
+    color: #2c3e50;
+}
 
-        body.light-mode .nav-icon.active::after {
-            background: #2c3e50;
-        }
+body.light-mode .nav-icon.active::after {
+    background: #2c3e50;
+} */
+
+/* Garde la même couleur en mode clair : */
+body.light-mode .nav-icon.active {
+    color: #FFD700;
+}
+
+body.light-mode .nav-icon.active::after {
+    background: #FFD700;
+}
 
         .page-turn-animation {
             position: fixed;
@@ -594,7 +611,7 @@ body.light-mode .book-page {
     </div>
 
     <div class="top-bar" id="topBar">
-        <div class="app-title">Baye Niass, le fracassant</div>
+        <div class="app-title">BAYE NIASS, LE FRACASSANT</div>
         <div class="page-indicator" id="pageIndicator"> </div>
         <div class="theme-toggle" id="themeToggle">
             <i class="fas fa-moon"></i>
