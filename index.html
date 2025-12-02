@@ -76,13 +76,18 @@
     image-rendering: auto;
 }
 
-        .content-page {
-            max-width: 800px;
-            padding: 40px 20px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            cursor: pointer;
-        }
+       .content-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 80px 30px 100px; /* Haut, côtés, bas */
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    cursor: pointer;
+    box-sizing: border-box;
+}
 
         body.light-mode .content-page {
             background: #ffffff;
@@ -114,12 +119,14 @@
             border-bottom: 1px solid rgba(52, 73, 94, 0.3);
         }
 
-        .content-page p {
-            font-size: 1.2rem;
-            line-height: 1.8;
-            margin-bottom: 1.5rem;
-            text-align: justify;
-        }
+      .content-page p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    text-align: justify;
+    max-width: 100%;
+    word-wrap: break-word; /* Force le texte à rester dans les limites */
+}
 
         .navigation-overlay {
             position: fixed;
@@ -209,7 +216,65 @@
 /* body.light-mode .app-title {
     color: #2c3e50;
 } */
+.content-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 80px 30px 100px; /* Haut, côtés, bas */
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    cursor: pointer;
+    box-sizing: border-box;
+}
 
+.content-page h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: #FFD700;
+    text-align: center;
+    font-weight: 300;
+    letter-spacing: 2px;
+    padding: 0 15px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.content-page h2 {
+    font-size: 2rem;
+    margin: 2rem 0 1rem;
+    color: #FFD700;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    padding: 0 15px 0.5rem;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.content-page p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    text-align: justify;
+    padding: 0 15px;
+    max-width: 100%;
+    box-sizing: border-box;
+    word-break: break-word;
+}
+
+/* Pour le mode clair */
+body.light-mode .content-page {
+    background: #ffffff;
+}
+
+body.light-mode .content-page h1,
+body.light-mode .content-page h2 {
+    color: #FFD700;
+}
+
+body.light-mode .content-page p {
+    color: #333333;
+}
 /* A la place, garde la même couleur en mode clair : */
 body.light-mode .app-title {
     color: #FFD700; /* Même couleur jaune or */
@@ -572,10 +637,94 @@ body.light-mode .book-page {
 /* Pour les pages de contenu (bio et privacy) garde le padding */
 .content-page {
     max-width: 800px;
-    padding: 40px 20px; /* Garde le padding pour le texte */
+    padding: 60px 30px; /* AUGMENTE le padding */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     cursor: pointer;
+    width: 100%;
+    height: 100vh; /* Prend toute la hauteur */
+    box-sizing: border-box;
+    margin: 0 auto; /* Centre le contenu */
+}
+      /* CORRECTION DU DÉFILEMENT */
+.content-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 80px 20px 100px !important; /* Plus d'espace */
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    box-sizing: border-box;
+    display: block !important;
+}
+
+/* Conteneur pour le contenu textuel */
+.content-page .content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 15px 40px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Assurer que les titres et paragraphes ont de l'espace */
+.content-page h1, 
+.content-page h2, 
+.content-page p {
+    padding: 0 10px;
+    box-sizing: border-box;
+    max-width: 100%;
+    word-wrap: break-word;
+}
+
+/* Espacement amélioré pour les paragraphes */
+.content-page p {
+    margin-bottom: 1.8rem;
+    line-height: 1.9;
+    text-align: left; /* Changé de justify à left pour meilleure lisibilité */
+    padding: 0 10px;
+}
+
+/* Ajustements pour mobile */
+@media (max-width: 768px) {
+    .content-page {
+        padding: 70px 15px 90px !important;
+    }
+    
+    .content-page .content {
+        padding: 15px 10px 30px;
+    }
+    
+    .content-page h1 {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .content-page h2 {
+        font-size: 1.6rem;
+        margin: 1.8rem 0 1rem;
+    }
+    
+    .content-page p {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Correction pour éviter le débordement */
+* {
+    max-height: 1000000px; /* Fix pour iOS */
+}
+
+/* Force le défilement sur iOS */
+.content-page {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: scroll !important;
+    height: 100vh;
 }
     </style>
 </head>
@@ -684,8 +833,9 @@ body.light-mode .book-page {
 </div>
 
      <!-- Page Biographie -->
-<div class="content" id="bio">
-    <h1>Son Excellence Ahmed Khalifa Niass</h1>
+<div class="page content-page" id="bio"> <!-- Ajouter la classe 'page' -->
+    <div class="content">
+        <h1>Biographie</h1>
     <p>Ambassadeur itinérant de la famille Niassène, fils aîné de la Cherifa Idaw’aly Aminata Haidara, né le 25 décembre 1946 à Kaolack, Ahmed Khalifa Niass est un homme pluridimensionnel. Dès son jeune âge, il se distingue par une détermination inébranlable, une curiosité insatiable et une ouverture d’esprit exceptionnelle. La proximité avec son père, avec qui il partageait parfois la chambre, l’a profondément marqué ; son décès en 1959 laisse un vide immense.</p>
     
     <h2>Enfance et Exil</h2>
@@ -702,17 +852,19 @@ body.light-mode .book-page {
     
     <p>Son parcours, aussi impressionnant que sa personnalité, inspire. Prions Allah pour une longue vie en santé, afin que ce digne fils de Khalifa Niass continue d’illuminer nos chemins.</p>
 </div>
+</div>
+</div>
 
         <!-- Page Politique de Confidentialité -->
         <div class="page content-page" id="privacy">
             <h1>Politique de Confidentialité</h1>
-            <p>Dernière mise à jour : 1er Janvier 2024</p>
+            <p>Dernière mise à jour : 1er décembre 2025</p>
             
             <h2>Collecte des Informations</h2>
             <p>Nous collectons uniquement les informations nécessaires au fonctionnement de l'application. Aucune donnée personnelle n'est stockée sur nos serveurs.</p>
             
             <h2>Utilisation des Données</h2>
-            <p>Les données de lecture (progression, préférences) sont stockées localement sur votre appareil. Ces informations ne quittent jamais votre appareil.</p>
+            <p>Les données de lecture (progression) sont stockées localement sur votre appareil. Ces informations ne quittent jamais votre appareil.</p>
             
             <h2>Cookies</h2>
             <p>Cette application n'utilise pas de cookies de suivi. Seuls les cookies techniques essentiels au fonctionnement peuvent être utilisés.</p>
@@ -721,7 +873,7 @@ body.light-mode .book-page {
             <p>Vous avez le droit d'accéder à vos données, de les rectifier ou de les supprimer. Pour exercer ces droits, contactez-nous.</p>
             
             <h2>Contact</h2>
-            <p>Pour toute question concernant cette politique de confidentialité, contactez-nous à : privacy@bookreader.app</p>
+            <p>Pour toute question concernant cette politique de confidentialité, contactez-nous à : ahmedkhalifaniasse00@gmail.com</p>
         </div>
     </div>
 
